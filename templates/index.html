@@ -1,0 +1,448 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Financial Chat App</title>
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f0f2f5;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+        }
+
+        #app-container {
+            width: 90%;
+            max-width: 800px;
+            background-color: #fff;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            display: flex;
+            flex-direction: column;
+            height: 90vh;
+            overflow: hidden;
+        }
+
+        #header {
+            background-color: #007bff;
+            color: white;
+            padding: 15px;
+            text-align: center;
+            font-size: 1.2em;
+            border-bottom: 1px solid #ddd;
+        }
+
+        #chat-area {
+            display: flex;
+            flex-direction: column;
+            flex-grow: 1;
+            overflow: hidden;
+        }
+
+        #chat-output {
+            flex-grow: 1;
+            padding: 20px;
+            overflow-y: auto;
+            border-bottom: 1px solid #e0e0e0;
+            background-color: #f9f9f9;
+        }
+
+        .message {
+            margin-bottom: 15px;
+            padding: 10px 15px;
+            border-radius: 18px;
+            line-height: 1.5;
+            max-width: 75%;
+            word-wrap: break-word;
+        }
+
+        .user-message {
+            background-color: #007bff;
+            color: white;
+            align-self: flex-end;
+            margin-left: auto;
+            border-bottom-right-radius: 5px;
+        }
+
+        .ai-message {
+            background-color: #e9e9eb;
+            color: #333;
+            align-self: flex-start;
+            margin-right: auto;
+            border-bottom-left-radius: 5px;
+        }
+
+        .system-message {
+            background-color: #f0f8ff;
+            color: #4682b4;
+            align-self: center;
+            text-align: center;
+            font-style: italic;
+            font-size: 0.9em;
+            padding: 8px 12px;
+            border-radius: 10px;
+            width: fit-content;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        .message strong {
+            font-weight: bold;
+        }
+
+        /* Ensure strong tag is bolded */
+        .message em {
+            font-style: italic;
+        }
+
+        /* Ensure em tag is italicized */
+        .message code {
+            background-color: #f0f0f0;
+            padding: 0.2em 0.4em;
+            margin: 0;
+            font-size: 85%;
+            border-radius: 3px;
+            font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, Courier, monospace;
+        }
+
+        .message pre {
+            background-color: #f0f0f0;
+            padding: 10px;
+            border-radius: 5px;
+            overflow-x: auto;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+            font-size: 0.9em;
+        }
+
+        .message pre code {
+            background-color: transparent;
+            padding: 0;
+            margin: 0;
+            font-size: inherit;
+            border-radius: 0;
+        }
+
+        /* Reset code style inside pre */
+        .message table {
+            border-collapse: collapse;
+            margin: 1em 0;
+            width: auto;
+        }
+
+        .message th,
+        .message td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: left;
+        }
+
+        .message th {
+            background-color: #f2f2f2;
+        }
+
+        .message ul,
+        .message ol {
+            margin-left: 20px;
+        }
+
+
+        #controls-area {
+            padding: 15px;
+            border-top: 1px solid #e0e0e0;
+            background-color: #fff;
+        }
+
+        #file-staging-area {
+            display: flex;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+
+        #file-input-label {
+            padding: 8px 12px;
+            background-color: #6c757d;
+            color: white;
+            border-radius: 5px;
+            cursor: pointer;
+            margin-right: 10px;
+            font-size: 0.9em;
+        }
+
+        #file-input-label:hover {
+            background-color: #5a6268;
+        }
+
+        #file-input {
+            display: none;
+        }
+
+        #staged-file-info {
+            flex-grow: 1;
+            font-size: 0.9em;
+            color: #333;
+            background-color: #f8f9fa;
+            padding: 8px;
+            border: 1px solid #ced4da;
+            border-radius: 5px;
+            min-height: 1.5em;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        #staged-file-name {
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        #remove-file-button {
+            background-color: #dc3545;
+            color: white;
+            border: none;
+            border-radius: 50%;
+            cursor: pointer;
+            width: 24px;
+            height: 24px;
+            font-size: 14px;
+            line-height: 24px;
+            text-align: center;
+            margin-left: 8px;
+        }
+
+        #remove-file-button:hover {
+            background-color: #c82333;
+        }
+
+        .hidden {
+            display: none !important;
+        }
+
+        #input-area {
+            display: flex;
+            margin-top: 10px;
+        }
+
+        #message-input {
+            flex-grow: 1;
+            padding: 12px;
+            border: 1px solid #ccc;
+            border-radius: 20px;
+            margin-right: 10px;
+        }
+
+        #send-button {
+            padding: 12px 20px;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            border-radius: 20px;
+            cursor: pointer;
+        }
+
+        #send-button:hover {
+            background-color: #0056b3;
+        }
+
+        .thinking-indicator {
+            font-style: italic;
+            color: #777;
+        }
+    </style>
+</head>
+
+<body>
+    <div id="app-container">
+        <div id="header">Financial AI Chat Assistant</div>
+        <div id="chat-area">
+            <div id="chat-output">
+                <div class="ai-message"><strong>AI:</strong> Hello! Select a file and type your instructions, or ask a
+                    general question.</div>
+            </div>
+        </div>
+        <div id="controls-area">
+            <div id="file-staging-area">
+                <label for="file-input" id="file-input-label">Select File</label>
+                <input type="file" id="file-input" accept=".xlsx, .xls, .csv">
+                <div id="staged-file-info" class="hidden">
+                    <span id="staged-file-name">No file selected</span>
+                    <button id="remove-file-button" title="Remove file">&times;</button>
+                </div>
+            </div>
+
+            <div id="input-area">
+                <input type="text" id="message-input"
+                    placeholder="Type your instructions for the file or a general query...">
+                <button id="send-button">Send</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Configure Marked.js to handle line breaks similar to GitHub Flavored Markdown
+        marked.setOptions({
+            breaks: true, // Convert single line breaks in Markdown to <br>
+            gfm: true     // Enable GitHub Flavored Markdown (includes tables, strikethrough, etc.)
+        });
+
+        const chatOutput = document.getElementById('chat-output');
+        const messageInput = document.getElementById('message-input');
+        const sendButton = document.getElementById('send-button');
+
+        const fileInputElement = document.getElementById('file-input');
+        const fileInputLabel = document.getElementById('file-input-label');
+        const stagedFileInfoDiv = document.getElementById('staged-file-info');
+        const stagedFileNameSpan = document.getElementById('staged-file-name');
+        const removeFileButton = document.getElementById('remove-file-button');
+
+        let stagedFile = null;
+
+        // No need for escapeHtml if using a proper Markdown parser that sanitizes
+        // function escapeHtml(unsafe) { ... } // Marked.js handles sanitization by default
+
+        function addMessageToChat(sender, message, type = '') {
+            const messageDiv = document.createElement('div');
+            messageDiv.classList.add('message');
+            let senderDisplay = sender;
+
+            if (sender === 'User') {
+                messageDiv.classList.add('user-message');
+                // User messages are typically not Markdown, so just display as text (or escape if needed)
+                messageDiv.innerHTML = `<strong>${senderDisplay}:</strong> ${message.replace(/\n/g, '<br>')}`;
+            } else if (sender === 'AI') {
+                messageDiv.classList.add('ai-message');
+                // For AI messages, parse the Markdown content
+                // Marked.js will sanitize the HTML output by default.
+                messageDiv.innerHTML = `<strong>${senderDisplay}:</strong> ${marked.parse(message)}`;
+            } else if (sender === 'System') {
+                messageDiv.classList.add('system-message');
+                senderDisplay = ''; // System messages might not need a "Sender:" prefix
+                // System messages (like file summaries) might contain pre-formatted text
+                if (type === 'data_summary') {
+                    messageDiv.innerHTML = `<pre>${message}</pre>`; // Keep <pre> for verbatim data summaries
+                } else {
+                    messageDiv.innerHTML = marked.parse(message); // Or parse if system messages can have MD
+                }
+            }
+
+            chatOutput.appendChild(messageDiv);
+            chatOutput.scrollTop = chatOutput.scrollHeight;
+        }
+
+        fileInputElement.addEventListener('change', function (event) {
+            const file = event.target.files[0];
+            if (file) {
+                const allowedExtensions = ['.xls', '.xlsx', '.csv'];
+                const fileExtension = '.' + file.name.split('.').pop().toLowerCase();
+                if (!allowedExtensions.includes(fileExtension)) {
+                    addMessageToChat('System', `Unsupported file type: ${file.name}. Please upload .xls, .xlsx, or .csv.`);
+                    stagedFile = null;
+                    updateStagedFileDisplay();
+                    fileInputElement.value = '';
+                    return;
+                }
+                stagedFile = file;
+                updateStagedFileDisplay();
+            }
+        });
+
+        removeFileButton.addEventListener('click', function () {
+            stagedFile = null;
+            fileInputElement.value = '';
+            updateStagedFileDisplay();
+        });
+
+        function updateStagedFileDisplay() {
+            if (stagedFile) {
+                stagedFileNameSpan.textContent = stagedFile.name;
+                stagedFileInfoDiv.classList.remove('hidden');
+                fileInputLabel.textContent = 'Replace File';
+            } else {
+                // stagedFileNameSpan.textContent = 'No file selected'; // Keep placeholder in HTML
+                stagedFileInfoDiv.classList.add('hidden');
+                fileInputLabel.textContent = 'Select File';
+            }
+        }
+
+        async function sendMessage() {
+            const messageText = messageInput.value.trim();
+            if (!messageText && !stagedFile) {
+                addMessageToChat('System', "Please type a message or select a file to send.");
+                return;
+            }
+
+            // Display user message (not Markdown parsed for user input)
+            addMessageToChat('User', messageText || (stagedFile ? `File selected: ${stagedFile.name}` : "Empty message sent"));
+
+            const originalMessageTextForInput = messageInput.value;
+            messageInput.value = '';
+
+            const thinkingDiv = document.createElement('div');
+            thinkingDiv.classList.add('message', 'ai-message', 'thinking-indicator');
+            thinkingDiv.innerHTML = `<strong>AI:</strong> Thinking...`;
+            chatOutput.appendChild(thinkingDiv);
+            chatOutput.scrollTop = chatOutput.scrollHeight;
+
+            const formData = new FormData();
+            formData.append('message', messageText);
+            if (stagedFile) {
+                formData.append('file', stagedFile);
+            }
+
+            try {
+                const response = await fetch('/chat', {
+                    method: 'POST',
+                    body: formData,
+                });
+
+                chatOutput.removeChild(thinkingDiv);
+
+                if (!response.ok) {
+                    const errorData = await response.json();
+                    addMessageToChat('AI', `Error: ${errorData.error || response.statusText}`);
+                    messageInput.value = originalMessageTextForInput;
+                    return;
+                }
+
+                const data = await response.json();
+                // AI message is now parsed by marked.parse() in addMessageToChat
+                addMessageToChat('AI', data.reply);
+
+                if (stagedFile && data.file_processed_successfully) {
+                    // If backend confirms file processing add a system message
+                    // This is optional as AI's response should ideally acknowledge the file.
+                    // addMessageToChat('System', `Successfully processed file: ${stagedFile.name}`);
+                    stagedFile = null;
+                    fileInputElement.value = '';
+                    updateStagedFileDisplay();
+                }
+            } catch (error) {
+                if (chatOutput.contains(thinkingDiv)) {
+                    chatOutput.removeChild(thinkingDiv);
+                }
+                console.error('Error sending message:', error);
+                addMessageToChat('AI', 'Sorry, an error occurred while communicating with the server.');
+                messageInput.value = originalMessageTextForInput;
+            }
+        }
+
+        sendButton.addEventListener('click', sendMessage);
+        messageInput.addEventListener('keypress', function (event) {
+            if (event.key === 'Enter' && !event.shiftKey) {
+                event.preventDefault();
+                sendMessage();
+            }
+        });
+        updateStagedFileDisplay(); 
+    </script>
+</body>
+
+</html>
